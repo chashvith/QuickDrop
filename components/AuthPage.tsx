@@ -17,13 +17,14 @@ export default function AuthPage() {
 
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) toast.error(error.message)
+      if (error) toast.error('Wrong email or password')
     } else {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) {
         toast.error(error.message)
       } else {
-        toast.success('Account created!')
+        toast.success('Account created! Signing you in...')
+        await supabase.auth.signInWithPassword({ email, password })
       }
     }
     setLoading(false)
@@ -32,9 +33,7 @@ export default function AuthPage() {
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      }
+      options: { redirectTo: window.location.origin }
     })
     if (error) toast.error(error.message)
   }
@@ -43,7 +42,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[#0f0f12] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="mb-10 text-center">
+        <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#7c6af5] mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -55,6 +54,23 @@ export default function AuthPage() {
 
         {/* Card */}
         <div className="bg-[#1a1a24] rounded-2xl p-6 border border-[#ffffff08]">
+
+          {/* Tabs */}
+          <div className="flex rounded-xl bg-[#0f0f12] p-1 mb-6">
+            <button
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${isLogin ? 'bg-[#7c6af5] text-white' : 'text-[#6b6b80] hover:text-white'}`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${!isLogin ? 'bg-[#7c6af5] text-white' : 'text-[#6b6b80] hover:text-white'}`}
+            >
+              Create Account
+            </button>
+          </div>
+
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <label className="block text-xs text-[#6b6b80] mb-2 font-medium uppercase tracking-wider">Email</label>
@@ -75,22 +91,23 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                minLength={6}
                 className="w-full bg-[#0f0f12] border border-[#ffffff10] rounded-xl px-4 py-3 text-white text-sm placeholder-[#4a4a5a] focus:outline-none focus:border-[#7c6af5] transition-colors"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#7c6af5] hover:bg-[#6a59e0] text-white font-medium py-3 rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-[#7c6af5] hover:bg-[#6a59e0] text-white font-medium py-3 rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
+              {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#ffffff08]">
+          <div className="mt-4 pt-4 border-t border-[#ffffff08]">
             <button
               onClick={handleGoogle}
-              className="w-full flex items-center justify-center gap-3 bg-white text-black font-medium py-3 rounded-xl text-sm hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-medium py-3 rounded-xl text-sm hover:bg-gray-100 transition-colors"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -102,16 +119,6 @@ export default function AuthPage() {
             </button>
           </div>
         </div>
-
-        <p className="text-center text-sm text-[#6b6b80] mt-6">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button 
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-[#7c6af5] hover:text-[#c4beff] transition-colors"
-          >
-            {isLogin ? 'Sign up' : 'Sign in'}
-          </button>
-        </p>
       </div>
     </div>
   )
